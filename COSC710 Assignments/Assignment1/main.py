@@ -26,23 +26,23 @@ def start():
     graph = initializeGraph(numberOfNodes)
 
     createConnectionsInGraph(graph, connections, graphType)
-    print(calculateCentrality(graph))
+    print(calculateDegree(graph))
     printGraph(graph)
 
 
 # returns a list of each node in the graph. organized by desc centrality score
-def calculateCentrality(graph: list[Node]):
+def calculateDegree(graph: list[Node]):
     # (Node, centrality score)
-    centralites = [(None, 0) for i in range(len(graph))]
+    degrees = [(None, 0) for i in range(len(graph))]
     for i, node in enumerate(graph):
-        centralites[i] = (node, len(node.connections))
+        degrees[i] = (node, len(node.connections))
 
     # Sort the tuples by the score
-    centralites.sort(key=lambda x: x[1], reverse=True)
+    degrees.sort(key=lambda x: x[1], reverse=True)
 
     # Makes a list of only the nodes
-    centralites = [val[0] for val in centralites]
-    return centralites
+    degrees = [val[0] for val in centralites]
+    return degrees
 
 
 

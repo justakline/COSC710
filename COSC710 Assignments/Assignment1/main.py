@@ -1,6 +1,5 @@
 from Node import Node
-
-
+from Calculations import *
 
 
 def start():
@@ -24,25 +23,29 @@ def start():
             connections.append([int(num) for num in line.strip().split(" ") if num])
 
     graph = initializeGraph(numberOfNodes)
-
     createConnectionsInGraph(graph, connections, graphType)
-    print(calculateDegree(graph))
-    printGraph(graph)
+    # printGraph(graph)
 
 
-# returns a list of each node in the graph. organized by desc centrality score
-def calculateDegree(graph: list[Node]):
-    # (Node, centrality score)
-    degrees = [(None, 0) for i in range(len(graph))]
-    for i, node in enumerate(graph):
-        degrees[i] = (node, len(node.connections))
+    ########### Organize by Centrality ##########
+    # calculateCloseness(graph[1], graph)
+    centralityList:list = getClosenessList(graph)
+    # print([node.name for node in centralityList])
 
-    # Sort the tuples by the score
-    degrees.sort(key=lambda x: x[1], reverse=True)
 
-    # Makes a list of only the nodes
-    degrees = [val[0] for val in centralites]
-    return degrees
+    ########### Organize by Degrees ##########
+    degreesList:list = getDegreeList(graph)
+    # print([node.name for node in degreesList])
+
+    ########## Organize by Betweeness ########
+    betweenessList = getBetweenessList(graph)
+    # print ([node.name for  node in betweenessList])
+
+
+
+
+
+
 
 
 
@@ -60,10 +63,10 @@ def createConnectionsInGraph(graph:list[Node], connections:list[list[int]], grap
         a = connect[0]
         b = connect[1]
         weight = connect[2]
-        graph[a].addNode(b, weight)
+        graph[a].addNode(graph[b], weight)
 
         if(graphType == 0):
-            graph[b].addNode(a, weight)
+            graph[b].addNode(graph[a], weight)
 
 
 

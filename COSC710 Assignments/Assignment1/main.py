@@ -26,13 +26,6 @@ def start():
     createConnectionsInGraph(graph, connections, graphType)
     # printGraph(graph)
 
-
-    ########### Organize by Centrality ##########
-    # calculateCloseness(graph[1], graph)
-    centralityList:list = getClosenessList(graph)
-    # print([node.name for node in centralityList])
-
-
     ########### Organize by Degrees ##########
     degreesList:list = getDegreeList(graph)
     # print([node.name for node in degreesList])
@@ -42,7 +35,69 @@ def start():
     # print ([node.name for  node in betweenessList])
 
 
+    ########### Organize by Closeness ##########
+    # calculateCloseness(graph[1], graph)
+    closenessList:list = getClosenessList(graph)
+    # print([node.name for node in closenessList])
 
+     ########## Organize by Clustering Coeff ########
+    clusteringList = closenessList.copy()
+    # clusteringList = getClusteringList(graph)
+    # print ([node.name for  node in betweenessList])
+    k = 0
+    validInput = False
+    while(not validInput):
+        try:
+            k = int(input("Please enter k nodes to remove: ")) 
+            if( k > len(graph) or k < 0):
+                raise  Exception(f"You can only remove 0 - {len(graph)} nodes") 
+            validInput = True
+        except Exception as e:
+            print(e)
+            print("Please type in a number\n")
+
+    degreesList = degreesList[k:]
+    betweenessList = betweenessList[k:]
+    closenessList = closenessList[k:]
+    clusteringList = clusteringList[k:]
+
+
+    allLists: list[tuple[list[Node], str]] = [(degreesList, "degreesList"), (betweenessList, "betweenessList"), (closenessList, "closenessList"), (clusteringList, "clusteringList")]
+
+    # Create a file for each list
+    for l, name in allLists:
+        graphCopy:list[Node]  = removeNodesFromGraph(graph.copy(), l)
+        print(graphCopy)
+        with open(f"{name}.txt", "w") as file:
+            file.write(f"{len(l)} {graphType}\n")
+            # Write dowm each of the nodes and their connections
+            nodePairs: list[set] = [] 
+            for node in graphCopy:
+                connections = node.connections
+                for n, weight in connections.items():
+                    pair = {node.name,n.name}
+                    # Check for the pair because
+                    if(graphType == 0 and pair not in nodePairs):
+                        file.write(f"{node.name} {n.name} {weight}\n")
+                        nodePairs.append(pair)
+                    if(graphType == 1):
+                        file.write(f"{node.name} {n.name} {weight}\n")
+
+
+        
+
+
+
+
+
+
+def removeNodesFromGraph(graph: list[Node], nodeList: list[Node]) -> list[Node]:
+    graphCopy = graph.copy()
+
+    for node in graph:
+        if(node not in nodeList):
+            graphCopy.remove(node)
+    return graphCopy
 
 
 

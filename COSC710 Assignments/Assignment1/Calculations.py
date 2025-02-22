@@ -1,6 +1,8 @@
 from Node import Node
 
 
+
+
 # returns a list of each node in the graph. organized by desc degree score
 def getDegreeList(graph: list[Node]):
     # (Node, centrality score)
@@ -8,13 +10,7 @@ def getDegreeList(graph: list[Node]):
     for i, node in enumerate(graph):
         degrees[i] = (node, len(node.connections))
 
-    # Sort the tuples by the score
-    degrees.sort(key=lambda x: x[1], reverse=True)
-
-    
-    # Makes a list of only the nodes
-    degrees = [val[0] for val in degrees]
-    return degrees
+    return sortTupleInList(degrees.copy())
 
 # returns a list of each node in the graph. organized by desc betweeness score
 def getBetweenessList(graph: list[Node]):
@@ -23,13 +19,7 @@ def getBetweenessList(graph: list[Node]):
     for i, node in enumerate(graph):
         betweeness[i] = (node, calculateBetweeness(node, graph))
 
-    # Sort the tuples by the score
-    betweeness.sort(key=lambda x: x[1], reverse=True)
-
-
-    # Makes a list of only the nodes
-    betweeness = [val[0] for val in betweeness]
-    return betweeness
+    return sortTupleInList(betweeness.copy())
 
 # returns a list of each node in the graph. organized by desc closeness score
 def getClosenessList(graph: list[Node]):
@@ -37,16 +27,25 @@ def getClosenessList(graph: list[Node]):
     closeness = [(None, 0) for i in range(len(graph))]
     for i, node in enumerate(graph):
         closeness[i] = (node, calculateCloseness(node, graph))
+    
+    return sortTupleInList(closeness.copy())
 
-    # Sort the tuples by the score
-    closeness.sort(key=lambda x: x[1], reverse=True)
+def getClusteringList(graph: list[Node]):
+    # (Node, centrality score)
+    closeness = [(None, 0) for i in range(len(graph))]
+    for i, node in enumerate(graph):
+        closeness[i] = (node, calculateCloseness(node, graph))
+    
+    return sortTupleInList(closeness.copy())
 
-    # for node, val in closeness:
-    #     print(f"{node.name}: has score {val}")
-
-    # Makes a list of only the nodes
-    closeness = [val[0] for val in closeness]
-    return closeness
+def calculateClustering(node: Node, graph: list[int]):
+    # take this node, get all its neighbors
+    # totalNumberOfTriplets = undirected - Sum( i  from i = 1 up to and includeing i = #neighbors-1)
+    # totalNumberOfTriplets = directed - Sum( i  from i = 1 up to and includeing i = #neighbors-1)
+    # Total Closed = Go through each neighbor one at a time, called v, and
+    #                  Check if any of v's neighbors is also one of node's neighbors
+    #                   Add to a running total, but also make sure that it is not already in there
+    pass
 
 # Closeness = sum(minumumpaths)/numberOfNodes-1
 def calculateCloseness(node, graph):
@@ -69,10 +68,6 @@ def calculateCloseness(node, graph):
     closeness = total/(len(graph)-1)
     # print(closeness)
     return closeness
-
-
-
-
 
 
 def calculateBetweeness(node, graph):
@@ -112,9 +107,9 @@ def getAllPathsThroughNode(node:Node, graph: list[Node]):
             allPaths.append(bfs(allNodesToCheck[i], allNodesToCheck[j]))
     return allPaths
     
-    print(numberOfPathsThroughNode)
-    print(numberOfPaths)
-    print(f"Betweeness={betweenness}")
+    # print(numberOfPathsThroughNode)
+    # print(numberOfPaths)
+    # print(f"Betweeness={betweenness}")
     # print(costs)
     # for path in allPaths:
     #     print(path)
@@ -128,8 +123,6 @@ def calculateCost( path: list[Node]):
         connectionCost = path[i].connections[path[i+1]]
         cost += connectionCost
     return cost
-
-
 
 def bfs( start: Node, goal: Node,):
     queue = [[start]]  
@@ -152,4 +145,9 @@ def bfs( start: Node, goal: Node,):
 
     return validPaths  # Return all paths found
 
+def sortTupleInList(tup: tuple[Node, int]):
+    tup.sort(key=lambda x: x[1], reverse=True)
 
+    # Makes a list of only the nodes
+    tup = [val[0] for val in tup]
+    return tup

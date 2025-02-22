@@ -15,3 +15,6 @@ class Node:
         for node, weight in self.connections.items():
             connectionsRep += f"{self.name}->{node.name} |{weight}| \t"
         return f"{connectionsRep}"
+    
+    def __repr__(self):
+        return f"{self.name}"

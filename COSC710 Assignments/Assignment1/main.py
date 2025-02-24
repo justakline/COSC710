@@ -5,7 +5,7 @@ from Calculations import *
 def start():
     graph: list[Node] = []
     connections:list[list[int]] = []
-    graphType: int
+    isDirected: bool
     numberOfNodes: int
 
     # Getting the paramaeters of the graph
@@ -13,7 +13,7 @@ def start():
         firstLine = file.readline()
         firstLine = firstLine.split(" ")
         numberOfNodes = int(firstLine[0])
-        graphType = int(firstLine[1])
+        isDirected = True if int(firstLine[1]) == 1 else False
 
     # get the connections
     with open("graph.txt", "r") as file:
@@ -23,7 +23,7 @@ def start():
             connections.append([int(num) for num in line.strip().split(" ") if num])
 
     graph = initializeGraph(numberOfNodes)
-    createConnectionsInGraph(graph, connections, graphType)
+    createConnectionsInGraph(graph, connections, isDirected)
     # printGraph(graph)
 
     ########### Organize by Degrees ##########
@@ -42,7 +42,7 @@ def start():
 
      ########## Organize by Clustering Coeff ########
     clusteringList = closenessList.copy()
-    # clusteringList = getClusteringList(graph)
+    clusteringList = getClusteringList(graph, isDirected )
     # print ([node.name for  node in betweenessList])
     k = 0
     validInput = False
@@ -67,8 +67,10 @@ def start():
     # Create a file for each list
     for l, name in allLists:
         graphCopy:list[Node]  = removeNodesFromGraph(graph.copy(), l)
-        print(graphCopy)
+        print(f"{name}:\t{l}")
+        # print(graphCopy)
         with open(f"{name}.txt", "w") as file:
+            graphType = 1 if isDirected else 0
             file.write(f"{len(l)} {graphType}\n")
             # Write dowm each of the nodes and their connections
             nodePairs: list[set] = [] 
@@ -84,19 +86,22 @@ def start():
                         file.write(f"{node.name} {n.name} {weight}\n")
 
 
-        
-
-
-
-
-
 
 def removeNodesFromGraph(graph: list[Node], nodeList: list[Node]) -> list[Node]:
     graphCopy = graph.copy()
-
+    removed = []
+    # Remove the nodes
     for node in graph:
         if(node not in nodeList):
+            removed.append(node)
             graphCopy.remove(node)
+
+    # Remove the edges associated with the removed nodes
+    for node in graphCopy.copy():
+        for n, val in node.connections.copy().items():
+            if(n in removed):
+                node.connections.pop(n)
+
     return graphCopy
 
 
@@ -113,14 +118,14 @@ def initializeGraph(numberOfNodes):
 
 
 # Graph type 0, means undireected, so both nodes have a connection to each other
-def createConnectionsInGraph(graph:list[Node], connections:list[list[int]], graphType:int):
+def createConnectionsInGraph(graph:list[Node], connections:list[list[int]], isDirected:bool):
     for connect in connections:
         a = connect[0]
         b = connect[1]
         weight = connect[2]
         graph[a].addNode(graph[b], weight)
 
-        if(graphType == 0):
+        if(not isDirected):
             graph[b].addNode(graph[a], weight)
 
 

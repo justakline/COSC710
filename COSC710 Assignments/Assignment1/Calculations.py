@@ -9,17 +9,22 @@ def getDegreeList(graph: list[Node]):
     degrees = [(None, 0) for i in range(len(graph))]
     for i, node in enumerate(graph):
         degrees[i] = (node, len(node.connections))
-
-    return sortTupleInList(degrees.copy())
+    
+    print(f"Degree: {degrees}\n")
+    tup = sortTupleInList(degrees.copy())
+    return tup
 
 # returns a list of each node in the graph. organized by desc betweeness score
 def getBetweenessList(graph: list[Node]):
     # (Node, betweeness score)
     betweeness = [(None, 0) for i in range(len(graph))]
     for i, node in enumerate(graph):
+        # print(f"{i} {node}")
         betweeness[i] = (node, calculateBetweeness(node, graph))
 
-    return sortTupleInList(betweeness.copy())
+    print(f"betweeness: {betweeness}\n")
+    tup = sortTupleInList(betweeness.copy())
+    return tup
 
 # returns a list of each node in the graph. organized by desc closeness score
 def getClosenessList(graph: list[Node]):
@@ -28,44 +33,81 @@ def getClosenessList(graph: list[Node]):
     for i, node in enumerate(graph):
         closeness[i] = (node, calculateCloseness(node, graph))
     
-    return sortTupleInList(closeness.copy())
+    print(f"Closeness: {closeness}\n")
+    tup = sortTupleInList(closeness.copy())
+    return tup
 
-def getClusteringList(graph: list[Node]):
+def getClusteringList(graph: list[Node], isDirected:bool):
     # (Node, centrality score)
-    closeness = [(None, 0) for i in range(len(graph))]
+    clustering = [(None, 0) for i in range(len(graph))]
     for i, node in enumerate(graph):
-        closeness[i] = (node, calculateCloseness(node, graph))
+        clustering[i] = (node, calculateClustering(node, graph, isDirected))
     
-    return sortTupleInList(closeness.copy())
+    print(f"Clustering: {clustering}\n")
+    tup = sortTupleInList(clustering.copy())
+    return tup
 
-def calculateClustering(node: Node, graph: list[int]):
-    # take this node, get all its neighbors
-    # totalNumberOfTriplets = undirected - Sum( i  from i = 1 up to and includeing i = #neighbors-1)
-    # totalNumberOfTriplets = directed - Sum( i  from i = 1 up to and includeing i = #neighbors-1)
-    # Total Closed = Go through each neighbor one at a time, called v, and
-    #                  Check if any of v's neighbors is also one of node's neighbors
-    #                   Add to a running total, but also make sure that it is not already in there
-    pass
+def calculateClustering(node: Node, graph: list[int], isDirected: bool):
+    graphCopy: list[Node] = graph.copy()
+    # Outbound neighbors... if undirected then thats all the neighbors
+    neighbors = set(node.connections.keys())
+    # Count the inbound neighbors
+    if isDirected:
+        for n in graphCopy:
+            if(node in n.connections):
+                neighbors.add(n)
 
-# Closeness = sum(minumumpaths)/numberOfNodes-1
+    k = len(neighbors) 
+    if k < 2:
+        return 0.0  
+    
+    T = count_triangles(graphCopy, node, isDirected)
+    print(f"{T=} {k=}")
+    denominator = k * (k - 1) if isDirected else (k * (k - 1)) / 2
+    return T / denominator
+
+def count_triangles(graphCopy: list[Node], node: Node, isDirected: bool) -> int:
+    neighbors = set(node.connections.keys())  # Outgoing neighbors
+    if isDirected:
+        # Incoming neighbors
+        for n in graphCopy:
+            if(node in n.connections):
+                neighbors.add(n)
+
+    # triangle_count = sum(1 for v in neighbors for w in neighbors if v != w and w in v.connections)
+
+    triangleCount = 0
+    print(f"{neighbors=}")
+    for v in neighbors:
+        for w in neighbors:
+            # since v and w are already neigbors, lets check if there is a connection between the 2, then we know that there is a triangle
+            if(v != w and (w in v.connections or v in w.connections)):
+                triangleCount += 1
+
+    
+    return triangleCount if isDirected else triangleCount / 2  # Avoid double counting in undirected graphs
+
+# Closeness = numberOfReachableNodes/sum(minumumpaths)
 def calculateCloseness(node, graph):
     allPaths = [bfs(node, n) for n in graph if n is not node]
-     # go through each pair of nodes and finds the min cost
+    # print(node.name)
+    # print(allPaths)
+     # go through each pair of nodes, (node, u) and finds the min cost, path is all of the paths from node to any other u
     total = 0
+    count = len(graph)-1
     for i, path in enumerate(allPaths):
-        costs = []
-
-        # Calculates the cost of each path from i, j... We do not really know what i and j are haha
+        # print(path)
+        # If we can't get to one of the nodes wew must remove it from the total nodes
+        if(not path):
+            count -= 1
+            continue
+        # p is every path from node to u, so we get them
+        minCost = float('inf')
         for p in path:
-            costs.append(calculateCost(p))
-
-
-        minCost = min(costs)
-        total += minCost
+            minCost = min(minCost, calculateCost(p))
         
-    
-    
-    closeness = total/(len(graph)-1)
+        total += minCost if minCost != float('inf') else 0
+    closeness = (count)/total if total != 0 else 0
     # print(closeness)
     return closeness
 
@@ -81,8 +123,9 @@ def calculateBetweeness(node, graph):
         for path in allPaths[i]:
             costs.append(calculateCost(path))
         
+        # print(f"{costs=}")
         # Keep all the minimum paths
-        minCost = min(costs)
+        minCost = min(costs) if costs else 0
         for j in range(len(allPaths[i])- 1, -1, -1):  
             if(costs[j] != minCost):
                 allPaths[i].pop(j)
@@ -93,7 +136,7 @@ def calculateBetweeness(node, graph):
         for path in allPaths[i]:
             if(node in path):
                 numberOfPathsThroughNode += 1
-        betweenness += numberOfPathsThroughNode/numberOfPaths
+        betweenness += numberOfPathsThroughNode/numberOfPaths if numberOfPaths != 0 else 0
     return betweenness
 
 def getAllPathsThroughNode(node:Node, graph: list[Node]):
@@ -101,10 +144,15 @@ def getAllPathsThroughNode(node:Node, graph: list[Node]):
     allNodesToCheck.remove(node)
     allPaths = []
 
+
+
     # Gets all paths between i and j
     for i in range(len(allNodesToCheck)):
         for j in range(i+1, len(allNodesToCheck)):
-            allPaths.append(bfs(allNodesToCheck[i], allNodesToCheck[j]))
+            path = bfs(allNodesToCheck[i], allNodesToCheck[j])
+            if(path):
+                allPaths.append(path)
+
     return allPaths
     
     # print(numberOfPathsThroughNode)

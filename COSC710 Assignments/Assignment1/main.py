@@ -17,11 +17,16 @@ def start():
             # Getting the paramaeters of the graph
             with open(pathName, "r") as file:
                 firstLine = file.readline()
-                firstLine = firstLine.split(" ")
+                firstLine = firstLine.strip().split(" ")
+
+                if(len(firstLine) != 2 or not isValidHeaderNum(firstLine[0]) or not isValidHeaderNum(firstLine[1]) ):
+                    raise Exception("The First line in your file needs exactly 2 positive ints and nothing else")
                 numberOfNodes = int(firstLine[0])
                 directedNumber = int(firstLine[1])
+                if(numberOfNodes <= 0):
+                    raise Exception("The number of nodes needs to be bigger than 0")
                 if(directedNumber != 0 and directedNumber != 1):
-                    raise Exception()
+                    raise Exception("Wrong number for your direction, should be either 0 or 1")
                 isDirected = True if directedNumber == 1 else False
 
             # get the connections
@@ -29,17 +34,18 @@ def start():
                 # Skip first line
                 file.readline()
                 for line in file:
+                    lineArray: list[str] = line.strip().split(" ")
+                    if(len(lineArray) != 3 or not isValidNum(lineArray[0],numberOfNodes) or not isValidNum(lineArray[1], numberOfNodes) or not isValidNum(lineArray[2],numberOfNodes, False)):
+                        raise Exception("After the first line in your file, every line afterwards must contain exactly 3 ints (first 2 must be positive) and nothing else.\nAlso if the number of nodes you provide=n then nodes in the graph will be 0, 1,...,n-1,\nso if you reference a connection from or to node n or above, that is incorrect formatting")
                     connections.append([int(num) for num in line.strip().split(" ") if num])
             graph = initializeGraph(numberOfNodes)
             createConnectionsInGraph(graph, connections, isDirected)
-            print("here")
             validPath = True
         except SystemExit:
             raise 
         except Exception as e:
-            print(e)
-            print("There was an error, either your provided the wrong path\nor the file was not formatted correctly.\n")
-            pass
+            print(f"\n{e}\n")
+            # print("There was an error, either your provided the wrong path\nor the file was not formatted correctly.\n")
         
 
     # printGraph(graph)
@@ -71,7 +77,7 @@ def start():
             validInput = True
         except Exception as e:
             print(e)
-            print("Please type in a number\n")
+            print("Please type in an int \n")
 
     degreesList = degreesList[k:]
     betweenessList = betweenessList[k:]
@@ -103,8 +109,25 @@ def start():
                         nodePairs.append(pair)
                     if(graphType == 1):
                         file.write(f"{node.name} {tup[0].name} {tup[1]}\n")
+    print(f"\n4 files were created that show the graph without the top k nodes, please reference each. \nIf you would like to see what the values are, please go into Calculations.py, and in the top 4 functions, there is a commented print statement. \nUncomment them and you will see the values of each set up in a list[ (Node, val) ] \n")
 
+def isValidHeaderNum(num:str):
+    try:
+        newNum = int(num)
+        if(newNum < 0) :
+            return False
+        return True
+    except:
+        return False
 
+def isValidNum(num:str, numberOfNodes:int, checkIfNeg:bool=True):
+    try:
+        newNum = int(num)
+        if((checkIfNeg and newNum < 0) or newNum >= numberOfNodes):
+            return False
+        return True
+    except:
+        return False
 
 def removeNodesFromGraph(graph: list[Node], nodeList: list[Node], ) -> list[Node]:
     graphCopy = []

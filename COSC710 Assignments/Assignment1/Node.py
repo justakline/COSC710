@@ -4,16 +4,17 @@
 
 class Node:
     def __init__(self, name):
-        self.connections: dict["Node", int] = {}
+        self.connections: list[tuple["Node", int]] = []
         self.name = name
 
     def addNode(self, node: "Node", weight:int):
-        self.connections[node] = weight
+        
+        self.connections.append([node, weight])
 
     def __str__(self):
         connectionsRep = ""
-        for node, weight in self.connections.items():
-            connectionsRep += f"{self.name}->{node.name} |{weight}| \t"
+        for connection in self.connections:
+            connectionsRep += f"{self.name}->{connection[0].name} |{connection[1]}| \t"
         return f"{connectionsRep}"
     
     def __repr__(self):

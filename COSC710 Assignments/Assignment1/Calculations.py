@@ -50,11 +50,11 @@ def getClusteringList(graph: list[Node], isDirected:bool):
 def calculateClustering(node: Node, graph: list[int], isDirected: bool):
     graphCopy: list[Node] = graph.copy()
     # Outbound neighbors... if undirected then thats all the neighbors
-    neighbors = set(node.connections.keys())
+    neighbors = set(getNodesFromConnectionList(node.connections))
     # Count the inbound neighbors
     if isDirected:
         for n in graphCopy:
-            if(node in n.connections):
+            if(node in getNodesFromConnectionList(n.connections)):
                 neighbors.add(n)
 
     k = len(neighbors) 
@@ -62,30 +62,38 @@ def calculateClustering(node: Node, graph: list[int], isDirected: bool):
         return 0.0  
     
     T = count_triangles(graphCopy, node, isDirected)
-    print(f"{T=} {k=}")
+    # print(f"{T=} {k=}")
     denominator = k * (k - 1) if isDirected else (k * (k - 1)) / 2
     return T / denominator
 
 def count_triangles(graphCopy: list[Node], node: Node, isDirected: bool) -> int:
-    neighbors = set(node.connections.keys())  # Outgoing neighbors
+    neighbors = getNodesFromConnectionList(node.connections)  # Outgoing neighbors
     if isDirected:
         # Incoming neighbors
         for n in graphCopy:
-            if(node in n.connections):
-                neighbors.add(n)
+            if(node in getNodesFromConnectionList(n.connections)):
+                neighbors.append(n)
 
     # triangle_count = sum(1 for v in neighbors for w in neighbors if v != w and w in v.connections)
 
     triangleCount = 0
-    print(f"{neighbors=}")
-    for v in neighbors:
-        for w in neighbors:
+    # print(f"{neighbors=}")
+    for i, v in enumerate(neighbors):
+        for j, w in enumerate(neighbors[i+1:]):
             # since v and w are already neigbors, lets check if there is a connection between the 2, then we know that there is a triangle
-            if(v != w and (w in v.connections or v in w.connections)):
+            if(v != w and (w in getNodesFromConnectionList(v.connections) or v in getNodesFromConnectionList(w.connections))):
+                # print(f"Found triangle: {w.name} and {v.name}")
                 triangleCount += 1
 
     
-    return triangleCount if isDirected else triangleCount / 2  # Avoid double counting in undirected graphs
+    return triangleCount if isDirected else triangleCount
+
+def getNodesFromConnectionList( connections: list[tuple[Node, int]]):
+    nodes = []
+    for node, val in connections:
+        nodes.append(node)
+    return nodes
+    
 
 # Closeness = numberOfReachableNodes/sum(minumumpaths)
 def calculateCloseness(node, graph):
@@ -107,6 +115,7 @@ def calculateCloseness(node, graph):
             minCost = min(minCost, calculateCost(p))
         
         total += minCost if minCost != float('inf') else 0
+    # print(f"{count=}, {total=}")
     closeness = (count)/total if total != 0 else 0
     # print(closeness)
     return closeness
@@ -168,7 +177,10 @@ def getAllPathsThroughNode(node:Node, graph: list[Node]):
 def calculateCost( path: list[Node]):
     cost = 0
     for i in range(len(path)-1):
-        connectionCost = path[i].connections[path[i+1]]
+        for  l in path[i].connections:
+            if(l[0] == path[i+1]):
+                connectionCost = l[1]
+        # connectionCost = path[i].connections[path[i+1]]
         cost += connectionCost
     return cost
 
@@ -186,7 +198,8 @@ def bfs( start: Node, goal: Node,):
             continue  # Continue exploring other paths
 
         # Add neighbors to queue if not already in currentPath
-        for neighbor in lastNode.connections.keys():
+        lastNodeConnections = [l[0] for l in lastNode.connections]
+        for neighbor in lastNodeConnections:
             if neighbor not in currentPath:
                 newPath = currentPath + [neighbor]  # Create a new path
                 queue.append(newPath)  # Add new path to queue

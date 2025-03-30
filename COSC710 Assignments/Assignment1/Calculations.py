@@ -10,7 +10,7 @@ def getDegreeList(graph: list[Node]):
     for i, node in enumerate(graph):
         degrees[i] = (node, len(node.connections))
     
-    # print(f"Degree: {degrees}")
+    print(f"Degree: {degrees}")
     tup = sortTupleInList(degrees.copy())
     return tup
 
@@ -22,7 +22,7 @@ def getBetweenessList(graph: list[Node]):
         # print(f"{i} {node}")
         betweeness[i] = (node, calculateBetweeness(node, graph))
 
-    # print(f"Betweeness: {betweeness}")
+    print(f"Betweeness: {betweeness}")
     tup = sortTupleInList(betweeness.copy())
     return tup
 
@@ -33,7 +33,7 @@ def getClosenessList(graph: list[Node]):
     for i, node in enumerate(graph):
         closeness[i] = (node, calculateCloseness(node, graph))
     
-    # print(f"Closeness: {closeness}")
+    print(f"Closeness: {closeness}")
     tup = sortTupleInList(closeness.copy())
     return tup
 
@@ -43,7 +43,7 @@ def getClusteringList(graph: list[Node], isDirected:bool):
     for i, node in enumerate(graph):
         clustering[i] = (node, calculateClustering(node, graph, isDirected))
     
-    # print(f"Clustering: {clustering}")
+    print(f"Clustering: {clustering}")
     tup = sortTupleInList(clustering.copy())
     return tup
 
